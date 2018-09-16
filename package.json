@@ -1,0 +1,43 @@
+{
+  "name": "mgwdev-core-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bundle": "browserify ./index.ts -p [ tsify --noImplicitAny ] > disc/index.js",
+    "start": "tsc",
+    "test": "nyc mocha --timeout=3000",
+    "tdd": "mocha ./test/*.ts --require ts-node/register --watch --watch-extensions ts"
+  },
+  "author": "m.g.wojciechowski@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^16.2.2",
+    "chai": "^4.1.2",
+    "nyc": "^12.0.2",
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.0",
+    "tsify": "^4.0.0",
+    "typescript": "2.3.4"
+  },
+  "dependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.4",
+    "@types/node": "^10.5.2"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "include": [
+      "./src/**.ts"
+    ],
+    "reporter": [
+      "html",
+      "text",
+      "text-summary"
+    ],
+    "all": true
+  }
+}
