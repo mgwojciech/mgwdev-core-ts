@@ -1,4 +1,5 @@
 import { IEntityRepository } from "./IEntityRepository";
+import { Query } from "../Model/Query";
 //Uses one of two provided repositories based on provided condition
 export class ComposedEntityRepository<T extends { Id: number | string }> implements IEntityRepository<T>{
 
@@ -13,11 +14,11 @@ export class ComposedEntityRepository<T extends { Id: number | string }> impleme
         else
             return this.PrimaryRepo.GetById(Id);
     }   
-    public Get(top: number, skip: number): Promise<T[]> {
+    Get(query: Query): Promise<T[]> {
         if(this.SecondaryCondition())
-            return this.SecondaryRepo.Get(top,skip);
+            return this.SecondaryRepo.Get(query);
         else
-            return this.PrimaryRepo.Get(top,skip);
+            return this.PrimaryRepo.Get(query);
     }
     public Update(entity: T): Promise<boolean> {
         if(this.SecondaryCondition())

@@ -1,7 +1,9 @@
-import { IEntityRepository, IHttpClient, HttpClient } from "../..";
+import { HttpClient } from "./../Client/HttpClient";
 import { Query } from "../Model/Query";
 import { IQueryHelper } from "../Helpers/IQueryHelper";
 import { RESTQueryHelper } from "../Helpers/RESTQueryHelper";
+import { IEntityRepository } from "./IEntityRepository";
+import { IHttpClient } from "../Client/IHttpClient";
 
 export class RESTEntityRepository<T extends { Id: number | string }> implements IEntityRepository<T>{
     constructor(protected Endpoint:string,
