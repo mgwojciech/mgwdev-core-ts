@@ -51,7 +51,7 @@ describe('RESTEntityRepository', () => {
             Id: 3,
             Title: "Test 3"
         }).then((result)=>{
-            assert.equal(httpClient.Calls[0].response.response, "OK");
+            assert.equal(httpClient.Calls[0].response, "OK");
         }).then(done);
     })
     it("should update", (done) => {
@@ -66,7 +66,7 @@ describe('RESTEntityRepository', () => {
             Id: 3,
             Title: "Test 3"
         }).then((result)=>{
-            assert.equal(httpClient.Calls[0].response.response, "OK");
+            assert.equal(httpClient.Calls[0].response, "OK");
         }).then(done);
     })
 
@@ -82,7 +82,7 @@ describe('RESTEntityRepository', () => {
             Id: 3,
             Title: "Test 3"
         }).then((result)=>{
-            assert.equal(httpClient.Calls[0].response.response, "OK");
+            assert.equal(httpClient.Calls[0].response, "OK");
         }).then(done);
     })
 });

@@ -20,19 +20,19 @@ export class ComposedEntityRepository<T extends { Id: number | string }> impleme
         else
             return this.PrimaryRepo.Get(query);
     }
-    public Update(entity: T): Promise<boolean> {
+    public Update(entity: T): Promise<void> {
         if(this.SecondaryCondition())
             return this.SecondaryRepo.Update(entity);
         else
             return this.PrimaryRepo.Update(entity);
     }
-    public Add(entity: T): Promise<boolean> {
+    public Add(entity: T): Promise<void> {
         if(this.SecondaryCondition())
             return this.SecondaryRepo.Add(entity);
         else
             return this.PrimaryRepo.Add(entity);
     }
-    public Delete(entity: T): Promise<boolean> {
+    public Delete(entity: T): Promise<void> {
         if(this.SecondaryCondition())
             return this.SecondaryRepo.Delete(entity);
         else

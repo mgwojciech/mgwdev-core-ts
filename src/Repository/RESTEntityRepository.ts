@@ -18,18 +18,18 @@ export class RESTEntityRepository<T extends { Id: number | string }> implements 
         let restQuery = this.QueryHelper.BuildQuery(query);
         return this.WebClient.Request(this.Endpoint+restQuery, "GET");
     }
-    Update(entity: T): Promise<boolean> {
-        return this.WebClient.Request(`${this.Endpoint}(${entity.Id})`, "PATCH",{
+    Update(entity: T): Promise<void> {
+        return this.WebClient.Request<void,T>(`${this.Endpoint}(${entity.Id})`, "PATCH",{
             requestData: entity
         });
     }
-    Add(entity: T): Promise<boolean> {
-        return this.WebClient.Request(this.Endpoint, "POST",{
+    Add(entity: T): Promise<void> {
+        return this.WebClient.Request<void,T>(this.Endpoint, "POST",{
             requestData: entity
         });
     }
-    Delete(entity: T): Promise<boolean> {
-        return this.WebClient.Request(`${this.Endpoint}(${entity.Id})`, "DELETE");
+    Delete(entity: T): Promise<void> {
+        return this.WebClient.Request<void,T>(`${this.Endpoint}(${entity.Id})`, "DELETE");
     }
 
     
