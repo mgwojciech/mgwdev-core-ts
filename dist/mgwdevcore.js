@@ -13,10 +13,11 @@ class HttpClient {
                     else
                         resolve(JSON.parse(oReq.responseText));
                 }
-                else
+                else if (oReq.status >= 400)
                     error(oReq);
             };
             oReq.open(method, url, true);
+            oReq.setRequestHeader("accept", "application/json");
             if (options && options.requestData)
                 oReq.send(JSON.stringify(options.requestData));
             else
@@ -111,6 +112,93 @@ exports.Query = Query;
 
 },{}],6:[function(require,module,exports){
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+class BasicEntityRepository {
+    constructor(BaseData = []) {
+        this.BaseData = BaseData;
+    }
+    GetById(Id) {
+        let self = this;
+        return new Promise((resolve, error) => {
+            try {
+                let result = self.BaseData.find((entity) => {
+                    return entity.Id == Id;
+                });
+                resolve(result);
+            }
+            catch (err) {
+                error(err);
+            }
+        });
+    }
+    Get(query) {
+        let self = this;
+        return new Promise((resolve, error) => {
+            try {
+                resolve(self.BaseData);
+            }
+            catch (err) {
+                error(err);
+            }
+        });
+    }
+    Update(entity) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let self = this;
+            let entityInRepo = yield self.GetById(entity.Id);
+            return new Promise((resolve, error) => {
+                try {
+                    let entityIndex = self.BaseData.indexOf(entityInRepo);
+                    self.BaseData[entityIndex] = entity;
+                    resolve();
+                }
+                catch (err) {
+                    error(err);
+                }
+            });
+        });
+    }
+    Add(entity) {
+        let self = this;
+        return new Promise((resolve, error) => {
+            try {
+                self.BaseData.push(entity);
+                resolve();
+            }
+            catch (err) {
+                error(err);
+            }
+        });
+    }
+    Delete(entity) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let self = this;
+            let entityInRepo = yield self.GetById(entity.Id);
+            return new Promise((resolve, error) => {
+                try {
+                    let entityIndex = self.BaseData.indexOf(entityInRepo);
+                    self.BaseData.splice(entityIndex, 1);
+                    resolve();
+                }
+                catch (err) {
+                    error(err);
+                }
+            });
+        });
+    }
+}
+exports.BasicEntityRepository = BasicEntityRepository;
+
+},{}],7:[function(require,module,exports){
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ComposedEntityRepository {
     constructor(PrimaryRepo, SecondaryRepo, SecondaryCondition) {
@@ -151,7 +239,7 @@ class ComposedEntityRepository {
 }
 exports.ComposedEntityRepository = ComposedEntityRepository;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const HttpClient_1 = require("./../Client/HttpClient");
@@ -167,7 +255,11 @@ class RESTEntityRepository {
     }
     Get(query) {
         let restQuery = this.QueryHelper.BuildQuery(query);
-        return this.WebClient.Request(this.Endpoint + restQuery, "GET");
+        return this.WebClient.Request(this.Endpoint + restQuery, "GET", {
+            responseParser: (result) => {
+                return JSON.parse(result).value;
+            }
+        });
     }
     Update(entity) {
         return this.WebClient.Request(`${this.Endpoint}(${entity.Id})`, "PATCH", {
@@ -185,7 +277,48 @@ class RESTEntityRepository {
 }
 exports.RESTEntityRepository = RESTEntityRepository;
 
-},{"../Helpers/RESTQueryHelper":4,"./../Client/HttpClient":1}],8:[function(require,module,exports){
+},{"../Helpers/RESTQueryHelper":4,"./../Client/HttpClient":1}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const BasicEntityRepository_1 = require("./BasicEntityRepository");
+class SessionStorageRepository extends BasicEntityRepository_1.BasicEntityRepository {
+    constructor(SessionStorageKey) {
+        super(SessionStorageRepository.GetInitialData(SessionStorageKey));
+        this.SessionStorageKey = SessionStorageKey;
+    }
+    static GetInitialData(SessionStorageKey) {
+        let serializedData = sessionStorage.getItem(SessionStorageKey);
+        if (serializedData)
+            return JSON.parse(serializedData);
+        else
+            return [];
+    }
+    UpdateSessionStorage() {
+        let serializedData = JSON.stringify(this.BaseData);
+        sessionStorage.setItem(this.SessionStorageKey, serializedData);
+    }
+    Add(entity) {
+        let self = this;
+        return super.Add(entity).then(() => {
+            self.UpdateSessionStorage();
+        });
+    }
+    Update(entity) {
+        let self = this;
+        return super.Update(entity).then(() => {
+            self.UpdateSessionStorage();
+        });
+    }
+    Delete(entity) {
+        let self = this;
+        return super.Delete(entity).then(() => {
+            self.UpdateSessionStorage();
+        });
+    }
+}
+exports.SessionStorageRepository = SessionStorageRepository;
+
+},{"./BasicEntityRepository":6}],10:[function(require,module,exports){
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -197,7 +330,9 @@ __export(require("./Helpers/ModelHelper"));
 __export(require("./Helpers/RESTQueryHelper"));
 __export(require("./Model/Query"));
 __export(require("./Repository/RESTEntityRepository"));
+__export(require("./Repository/BasicEntityRepository"));
+__export(require("./Repository/SessionStorageRepository"));
 __export(require("./Repository/ComposedEntityRepository"));
 
-},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/ModelHelper":3,"./Helpers/RESTQueryHelper":4,"./Model/Query":5,"./Repository/ComposedEntityRepository":6,"./Repository/RESTEntityRepository":7}]},{},[8])(8)
+},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/ModelHelper":3,"./Helpers/RESTQueryHelper":4,"./Model/Query":5,"./Repository/BasicEntityRepository":6,"./Repository/ComposedEntityRepository":7,"./Repository/RESTEntityRepository":8,"./Repository/SessionStorageRepository":9}]},{},[10])(10)
 });

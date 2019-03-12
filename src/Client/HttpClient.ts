@@ -17,10 +17,11 @@ export class HttpClient implements IHttpClient {
                     else
                         resolve(JSON.parse(oReq.responseText));
                 }
-                else
+                else if(oReq.status >= 400)
                     error(oReq);
             }
             oReq.open(method, url, true);
+            oReq.setRequestHeader("accept","application/json")
             if (options && options.requestData)
                 oReq.send(JSON.stringify(options.requestData));
             else

@@ -16,7 +16,11 @@ export class RESTEntityRepository<T extends { Id: number | string }> implements 
     }    
     Get(query: Query): Promise<T[]> {
         let restQuery = this.QueryHelper.BuildQuery(query);
-        return this.WebClient.Request(this.Endpoint+restQuery, "GET");
+        return this.WebClient.Request(this.Endpoint+restQuery, "GET",{
+            responseParser: (result: string)=>{
+                return JSON.parse(result).value
+            }
+        });
     }
     Update(entity: T): Promise<void> {
         return this.WebClient.Request<void,T>(`${this.Endpoint}(${entity.Id})`, "PATCH",{

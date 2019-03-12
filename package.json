@@ -5,7 +5,7 @@
   "main": "lib/src/index.js",
   "scripts": {
     "bundle": "browserify ./src/index.ts -p [ tsify --noImplicitAny ] > dist/mgwdevcore.js --standalone MGWDev.Core",
-    "start": "del /s /q lib && tsc ./src/index.ts --outDir lib --target es6",
+    "build": "del /s /q lib && tsc ./src/index.ts --outDir lib --target es6",
     "tdd": "mocha ./test/*.ts --require ts-node/register --watch --watch-extensions ts"
   },
   "author": "m.g.wojciechowski@gmail.com",

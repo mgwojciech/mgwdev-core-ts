@@ -1,5 +1,5 @@
 import { IEntityRepository } from "./IEntityRepository";
-import { Query } from "..";
+import { Query } from "./../Model/Query";
 
 export class BasicEntityRepository<T extends { Id: number | string }> implements IEntityRepository<T>{
     constructor(public BaseData: T[] = []) {
