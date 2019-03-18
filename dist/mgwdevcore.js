@@ -70,11 +70,99 @@ exports.MockHttpClient = MockHttpClient;
 },{}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+class ConsoleLogger {
+    LogMessage(message) {
+        console.log(message);
+    }
+    LogError(errorMessage, data) {
+        console.error(errorMessage, data);
+    }
+}
+exports.ConsoleLogger = ConsoleLogger;
+
+},{}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class HTMLLogger {
+    constructor(rootElementId, Options = {
+            ButtonClass: "logger-button",
+            MessageClass: "logger-message",
+            ContainerClass: "logger-container"
+        }) {
+        this.Options = Options;
+        this.RootElement = document.getElementById(rootElementId) || document.body;
+        this.InitContainer();
+    }
+    LogMessage(message) {
+        this.RenderMessage(message);
+    }
+    LogError(errorMessage, data) {
+        this.RenderMessage(`<span style="color:red;">${errorMessage}</span>`);
+    }
+    RenderMessage(htmlMessage) {
+        let messageContainer = document.getElementById("logger-container-message");
+        if (messageContainer) {
+            messageContainer.innerHTML = htmlMessage;
+        }
+        let loggerContainer = document.getElementById("logger-container");
+        if (loggerContainer)
+            loggerContainer.style.display = "block";
+    }
+    InitContainer() {
+        let self = this;
+        let messageContainer = document.createElement("div");
+        messageContainer.id = "logger-container-message";
+        messageContainer.className = self.Options.MessageClass;
+        let loggerContainer = document.createElement("div");
+        loggerContainer.id = "logger-container";
+        loggerContainer.className = "logger-container";
+        loggerContainer.style.display = "none";
+        loggerContainer.className = self.Options.ContainerClass;
+        let footer = document.createElement("div");
+        footer.className = "logger-container-footer";
+        let okBtn = document.createElement("button");
+        okBtn.className = self.Options.ButtonClass;
+        okBtn.value = "OK";
+        okBtn.innerText = "OK";
+        okBtn.onclick = function () {
+            loggerContainer.style.display = "none";
+            return false;
+        };
+        footer.appendChild(okBtn);
+        loggerContainer.appendChild(messageContainer);
+        loggerContainer.appendChild(footer);
+        self.RootElement.appendChild(loggerContainer);
+    }
+}
+exports.HTMLLogger = HTMLLogger;
+
+},{}],5:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const ConsoleLogger_1 = require("./ConsoleLogger");
+class Logger {
+    static LogMessage(message) {
+        Logger.Loggers.forEach(logger => {
+            logger.LogMessage(message);
+        });
+    }
+    static LogError(errorMessage, data) {
+        Logger.Loggers.forEach(logger => {
+            logger.LogError(errorMessage, data);
+        });
+    }
+}
+Logger.Loggers = [new ConsoleLogger_1.ConsoleLogger()];
+exports.Logger = Logger;
+
+},{"./ConsoleLogger":3}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class ModelHelper {
 }
 exports.ModelHelper = ModelHelper;
 
-},{}],4:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class RESTQueryHelper {
@@ -103,14 +191,14 @@ class RESTQueryHelper {
 }
 exports.RESTQueryHelper = RESTQueryHelper;
 
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Query {
 }
 exports.Query = Query;
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -197,7 +285,7 @@ class BasicEntityRepository {
 }
 exports.BasicEntityRepository = BasicEntityRepository;
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ComposedEntityRepository {
@@ -239,7 +327,7 @@ class ComposedEntityRepository {
 }
 exports.ComposedEntityRepository = ComposedEntityRepository;
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const HttpClient_1 = require("./../Client/HttpClient");
@@ -277,7 +365,7 @@ class RESTEntityRepository {
 }
 exports.RESTEntityRepository = RESTEntityRepository;
 
-},{"../Helpers/RESTQueryHelper":4,"./../Client/HttpClient":1}],9:[function(require,module,exports){
+},{"../Helpers/RESTQueryHelper":7,"./../Client/HttpClient":1}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const BasicEntityRepository_1 = require("./BasicEntityRepository");
@@ -318,7 +406,7 @@ class SessionStorageRepository extends BasicEntityRepository_1.BasicEntityReposi
 }
 exports.SessionStorageRepository = SessionStorageRepository;
 
-},{"./BasicEntityRepository":6}],10:[function(require,module,exports){
+},{"./BasicEntityRepository":9}],13:[function(require,module,exports){
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -333,6 +421,9 @@ __export(require("./Repository/RESTEntityRepository"));
 __export(require("./Repository/BasicEntityRepository"));
 __export(require("./Repository/SessionStorageRepository"));
 __export(require("./Repository/ComposedEntityRepository"));
+__export(require("./Helpers/Logger/ConsoleLogger"));
+__export(require("./Helpers/Logger/Logger"));
+__export(require("./Helpers/Logger/HTMLLogger"));
 
-},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/ModelHelper":3,"./Helpers/RESTQueryHelper":4,"./Model/Query":5,"./Repository/BasicEntityRepository":6,"./Repository/ComposedEntityRepository":7,"./Repository/RESTEntityRepository":8,"./Repository/SessionStorageRepository":9}]},{},[10])(10)
+},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/Logger/ConsoleLogger":3,"./Helpers/Logger/HTMLLogger":4,"./Helpers/Logger/Logger":5,"./Helpers/ModelHelper":6,"./Helpers/RESTQueryHelper":7,"./Model/Query":8,"./Repository/BasicEntityRepository":9,"./Repository/ComposedEntityRepository":10,"./Repository/RESTEntityRepository":11,"./Repository/SessionStorageRepository":12}]},{},[13])(13)
 });

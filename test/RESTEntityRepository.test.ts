@@ -24,13 +24,13 @@ describe('RESTEntityRepository', () => {
         let entityRepository = new RESTEntityRepository<{ Id: number, Title: string }>("/_api/Entity", new MockHttpClient([{
             url: "/_api/Entity?$top=2",
             method: "GET",
-            response: [{
+            response: JSON.stringify({value :[{
                 Id: 1,
                 Title: "Test 1"
             }, {
                 Id: 2,
                 Title: "Test 2"
-            }]
+            }]})
         }]))
 
         entityRepository.Get({

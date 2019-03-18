@@ -1,20 +1,21 @@
 {
   "name": "mgwdev-core-ts",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "lib/src/index.js",
   "scripts": {
     "bundle": "browserify ./src/index.ts -p [ tsify --noImplicitAny ] > dist/mgwdevcore.js --standalone MGWDev.Core",
     "build": "del /s /q lib && tsc ./src/index.ts --outDir lib --target es6",
-    "tdd": "mocha ./test/*.ts --require ts-node/register --watch --watch-extensions ts"
+    "tdd": "mocha ./test/*.ts --require ts-node/register --watch --watch-extensions ts",
+    "test": "mocha ./test/*.ts --require ts-node/register"
   },
   "author": "m.g.wojciechowski@gmail.com",
   "license": "ISC",
   "devDependencies": {
     "browserify": "^16.2.2",
     "chai": "^4.1.2",
-    "nyc": "^12.0.2",
     "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "ts-node": "^7.0.0",
     "tsify": "^4.0.0",
     "typescript": "2.3.4"

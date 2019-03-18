@@ -10,3 +10,7 @@ export * from './Repository/RESTEntityRepository'
 export * from './Repository/BasicEntityRepository'
 export * from './Repository/SessionStorageRepository'
 export * from './Repository/ComposedEntityRepository'
+export * from './Helpers/Logger/ILogger';
+export * from './Helpers/Logger/ConsoleLogger';
+export * from './Helpers/Logger/Logger';
+export * from './Helpers/Logger/HTMLLogger';
