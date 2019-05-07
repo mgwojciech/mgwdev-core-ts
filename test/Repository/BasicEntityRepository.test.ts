@@ -1,6 +1,6 @@
 
 import { expect, assert } from 'chai';
-import { BasicEntityRepository } from '../src/Repository/BasicEntityRepository';
+import { BasicEntityRepository } from '../../src/Repository/BasicEntityRepository';
 /// <reference types="mocha" />
 
 describe('BasicEntityRepository', () => {

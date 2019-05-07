@@ -1,6 +1,6 @@
-import {ModelHelper} from './../src/Helpers/ModelHelper'
+import {ModelHelper} from '../../src/Helpers/ModelHelper'
 import {expect, assert} from 'chai';
-import { RESTQueryHelper } from '../src/Helpers/RESTQueryHelper';
+import { RESTQueryHelper } from '../../src/Helpers/RESTQueryHelper';
 /// <reference types="mocha" />
 
 describe('RESTQueryHelper', () => {

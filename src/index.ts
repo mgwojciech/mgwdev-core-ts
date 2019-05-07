@@ -1,16 +1,30 @@
+import { HttpClient } from './Client/HttpClient';
+import { SearchClient } from './Helpers/Search/SearchClient';
+
 export * from './Client/HttpClient'
 export * from './Client/IHttpClient'
 export * from './Client/MockHttpClient'
 export * from './Helpers/IQueryHelper'
 export * from './Helpers/ModelHelper'
+export * from './Helpers/Search/SearchClient'
 export * from './Helpers/RESTQueryHelper'
 export * from './Model/Query'
+export * from './Model/User'
+export * from './Model/SP/SearchResult'
 export * from './Repository/IEntityRepository'
 export * from './Repository/RESTEntityRepository'
 export * from './Repository/BasicEntityRepository'
 export * from './Repository/SessionStorageRepository'
 export * from './Repository/ComposedEntityRepository'
+export * from './Repository/IDataProvider'
+export * from './Repository/SearchDrivenDataProvider'
 export * from './Helpers/Logger/ILogger';
 export * from './Helpers/Logger/ConsoleLogger';
 export * from './Helpers/Logger/Logger';
 export * from './Helpers/Logger/HTMLLogger';
+export * from './Helpers/ComponentHelpers/PeoplePickerHelper';
+export * from './Helpers/Search/ISearchResultsMapper';
+export * from './Helpers/Search/SearchClient';
+export * from './Helpers/Search/SearchQueryBuilder';
+export * from './Helpers/Search/UserSearchResultMapper';
+export * from './Helpers/ArrayHelpers';

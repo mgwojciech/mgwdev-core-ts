@@ -1,6 +1,12 @@
 import { IHttpClient } from "./IHttpClient";
 
 export class HttpClient implements IHttpClient {
+    constructor(public DefaultHeaders: { key: string; value: string; }[] = [{
+        key: "accept",
+        value: "application/json"
+    }]){
+
+    }
     public Request<T, U>(url: string, method: string, options?: {
         headers?: { key: string; value: string; }[],
         responseParser?: (responseText: string) => T,
@@ -21,7 +27,9 @@ export class HttpClient implements IHttpClient {
                     error(oReq);
             }
             oReq.open(method, url, true);
-            oReq.setRequestHeader("accept","application/json")
+            self.DefaultHeaders.forEach((header)=>{
+                oReq.setRequestHeader(header.key,header.value)
+            })
             if (options && options.requestData)
                 oReq.send(JSON.stringify(options.requestData));
             else

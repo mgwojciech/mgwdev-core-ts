@@ -1,8 +1,8 @@
 
 import { expect, assert } from 'chai';
-import { RESTQueryHelper } from '../src/Helpers/RESTQueryHelper';
-import { RESTEntityRepository } from '../src/Repository/RESTEntityRepository';
-import { MockHttpClient } from '../src';
+import { RESTQueryHelper } from '../../src/Helpers/RESTQueryHelper';
+import { RESTEntityRepository } from '../../src/Repository/RESTEntityRepository';
+import { MockHttpClient } from '../../src';
 /// <reference types="mocha" />
 
 describe('RESTEntityRepository', () => {

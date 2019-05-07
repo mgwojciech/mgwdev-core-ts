@@ -2,6 +2,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class HttpClient {
+    constructor(DefaultHeaders = [{
+                key: "accept",
+                value: "application/json"
+            }]) {
+        this.DefaultHeaders = DefaultHeaders;
+    }
     Request(url, method, options) {
         let self = this;
         return new Promise((resolve, error) => {
@@ -17,7 +23,9 @@ class HttpClient {
                     error(oReq);
             };
             oReq.open(method, url, true);
-            oReq.setRequestHeader("accept", "application/json");
+            self.DefaultHeaders.forEach((header) => {
+                oReq.setRequestHeader(header.key, header.value);
+            });
             if (options && options.requestData)
                 oReq.send(JSON.stringify(options.requestData));
             else
@@ -70,6 +78,51 @@ exports.MockHttpClient = MockHttpClient;
 },{}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+class ArrayHelper {
+    static FindValueByKey(array, key) {
+        let temp = array.find((item) => {
+            return item.Key == key;
+        });
+        if (temp)
+            return temp.Value;
+        return "";
+    }
+}
+exports.ArrayHelper = ArrayHelper;
+
+},{}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const SearchClient_1 = require("../Search/SearchClient");
+const SearchDrivenDataProvider_1 = require("../../Repository/SearchDrivenDataProvider");
+const UserSearchResultMapper_1 = require("../Search/UserSearchResultMapper");
+const SearchQueryBuilder_1 = require("../Search/SearchQueryBuilder");
+class PeoplePickerHelper {
+    constructor(SelectedPeople, UsersRepository) {
+        this.SelectedPeople = SelectedPeople;
+        this.UsersRepository = UsersRepository;
+    }
+    QueryPeopleSource(queryText) {
+        return this.UsersRepository.Get({
+            Query: queryText
+        });
+    }
+}
+exports.PeoplePickerHelper = PeoplePickerHelper;
+class SearchDrivenPeoplePickerHelperFactory {
+    constructor(HttpClient) {
+        this.HttpClient = HttpClient;
+    }
+    GetPeoplePickerHelper(SelectedPeople) {
+        let dataProvider = new SearchDrivenDataProvider_1.SearchDrivenDataProvider(new UserSearchResultMapper_1.UserSearchResultMapper(), new SearchClient_1.SearchClient(this.HttpClient), new SearchQueryBuilder_1.UserSearchQueryBuilder());
+        return new PeoplePickerHelper(SelectedPeople, dataProvider);
+    }
+}
+exports.SearchDrivenPeoplePickerHelperFactory = SearchDrivenPeoplePickerHelperFactory;
+
+},{"../../Repository/SearchDrivenDataProvider":17,"../Search/SearchClient":10,"../Search/SearchQueryBuilder":11,"../Search/UserSearchResultMapper":12}],5:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class ConsoleLogger {
     LogMessage(message) {
         console.log(message);
@@ -80,7 +133,7 @@ class ConsoleLogger {
 }
 exports.ConsoleLogger = ConsoleLogger;
 
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class HTMLLogger {
@@ -136,7 +189,7 @@ class HTMLLogger {
 }
 exports.HTMLLogger = HTMLLogger;
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const ConsoleLogger_1 = require("./ConsoleLogger");
@@ -155,14 +208,14 @@ class Logger {
 Logger.Loggers = [new ConsoleLogger_1.ConsoleLogger()];
 exports.Logger = Logger;
 
-},{"./ConsoleLogger":3}],6:[function(require,module,exports){
+},{"./ConsoleLogger":5}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ModelHelper {
 }
 exports.ModelHelper = ModelHelper;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class RESTQueryHelper {
@@ -191,14 +244,96 @@ class RESTQueryHelper {
 }
 exports.RESTQueryHelper = RESTQueryHelper;
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class SearchClient {
+    constructor(HttpClient) {
+        this.HttpClient = HttpClient;
+    }
+    QuerySearch(queryText) {
+        return this.HttpClient.Request(`/_api/search/query?querytext='${queryText}'`, "GET");
+    }
+    QuerySearchWithComplexQuery(complexQuery) {
+        return this.HttpClient.Request(`/_api/search/query${complexQuery}`, "GET");
+    }
+}
+exports.SearchClient = SearchClient;
+
+},{}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class SearchQueryBuilder {
+    BuildQuery(queryText, skip = 0) {
+        return `?querytext='${queryText}'${this.BuildScopePart()}${this.BuildSkipAndTop(skip)}${this.BuildSelect()}`;
+    }
+}
+exports.SearchQueryBuilder = SearchQueryBuilder;
+class SimpleSearchQueryBuilder extends SearchQueryBuilder {
+    constructor(ScopeId, Top = 10, Fields) {
+        super();
+        this.ScopeId = ScopeId;
+        this.Top = Top;
+        this.Fields = Fields;
+    }
+    BuildScopePart() {
+        if (this.ScopeId)
+            return `&sourceid='${this.ScopeId}'`;
+        return "";
+    }
+    BuildSkipAndTop(skip = 0) {
+        return `&startrow=${skip}&rowlimit=${this.Top}`;
+    }
+    BuildSelect() {
+        if (this.Fields)
+            return `&selectProperties='${this.Fields.join(',')}'`;
+        return "";
+    }
+}
+exports.SimpleSearchQueryBuilder = SimpleSearchQueryBuilder;
+class UserSearchQueryBuilder extends SimpleSearchQueryBuilder {
+    constructor() {
+        super("b09a7990-05ea-4af9-81ef-edfab16c4e31", 10, ['PreferredName', 'AccountName', 'Department', 'JobTitle', 'PictureURL', 'UserProfile_GUID', 'WorkEmail']);
+    }
+}
+exports.UserSearchQueryBuilder = UserSearchQueryBuilder;
+
+},{}],12:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const ArrayHelpers_1 = require("../ArrayHelpers");
+class UserSearchResultMapper {
+    MapToEntity(searchResults) {
+        if (searchResults &&
+            searchResults.PrimaryQueryResult &&
+            searchResults.PrimaryQueryResult.RelevantResults &&
+            searchResults.PrimaryQueryResult.RelevantResults.Table &&
+            searchResults.PrimaryQueryResult.RelevantResults.Table.Rows) {
+            return searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.map((row) => {
+                return {
+                    AccountName: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "AccountName"),
+                    Department: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "Department"),
+                    JobTitle: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "JobTitle"),
+                    PictureURL: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "PictureURL"),
+                    PreferredName: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "PreferredName"),
+                    UserProfile_GUID: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "UserProfile_GUID"),
+                    WorkEmail: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "WorkEmail"),
+                };
+            });
+        }
+        return [];
+    }
+}
+exports.UserSearchResultMapper = UserSearchResultMapper;
+
+},{"../ArrayHelpers":3}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Query {
 }
 exports.Query = Query;
 
-},{}],9:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -285,7 +420,7 @@ class BasicEntityRepository {
 }
 exports.BasicEntityRepository = BasicEntityRepository;
 
-},{}],10:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ComposedEntityRepository {
@@ -327,7 +462,7 @@ class ComposedEntityRepository {
 }
 exports.ComposedEntityRepository = ComposedEntityRepository;
 
-},{}],11:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const HttpClient_1 = require("./../Client/HttpClient");
@@ -365,7 +500,26 @@ class RESTEntityRepository {
 }
 exports.RESTEntityRepository = RESTEntityRepository;
 
-},{"../Helpers/RESTQueryHelper":7,"./../Client/HttpClient":1}],12:[function(require,module,exports){
+},{"../Helpers/RESTQueryHelper":9,"./../Client/HttpClient":1}],17:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class SearchDrivenDataProvider {
+    constructor(ResultMapper, SearchClient, QueryBuilder) {
+        this.ResultMapper = ResultMapper;
+        this.SearchClient = SearchClient;
+        this.QueryBuilder = QueryBuilder;
+    }
+    Get(query) {
+        let self = this;
+        let searchQuery = this.QueryBuilder.BuildQuery(query.Query || "", query.Skip);
+        return self.SearchClient.QuerySearchWithComplexQuery(searchQuery).then((results) => {
+            return self.ResultMapper.MapToEntity(results);
+        });
+    }
+}
+exports.SearchDrivenDataProvider = SearchDrivenDataProvider;
+
+},{}],18:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const BasicEntityRepository_1 = require("./BasicEntityRepository");
@@ -406,24 +560,36 @@ class SessionStorageRepository extends BasicEntityRepository_1.BasicEntityReposi
 }
 exports.SessionStorageRepository = SessionStorageRepository;
 
-},{"./BasicEntityRepository":9}],13:[function(require,module,exports){
+},{"./BasicEntityRepository":14}],19:[function(require,module,exports){
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
+const HttpClient_1 = require("./Client/HttpClient");
+const SearchClient_1 = require("./Helpers/Search/SearchClient");
 __export(require("./Client/HttpClient"));
 __export(require("./Client/MockHttpClient"));
 __export(require("./Helpers/ModelHelper"));
+__export(require("./Helpers/Search/SearchClient"));
 __export(require("./Helpers/RESTQueryHelper"));
 __export(require("./Model/Query"));
 __export(require("./Repository/RESTEntityRepository"));
 __export(require("./Repository/BasicEntityRepository"));
 __export(require("./Repository/SessionStorageRepository"));
 __export(require("./Repository/ComposedEntityRepository"));
+__export(require("./Repository/SearchDrivenDataProvider"));
 __export(require("./Helpers/Logger/ConsoleLogger"));
 __export(require("./Helpers/Logger/Logger"));
 __export(require("./Helpers/Logger/HTMLLogger"));
+__export(require("./Helpers/ComponentHelpers/PeoplePickerHelper"));
+__export(require("./Helpers/Search/SearchClient"));
+__export(require("./Helpers/Search/SearchQueryBuilder"));
+__export(require("./Helpers/Search/UserSearchResultMapper"));
+__export(require("./Helpers/ArrayHelpers"));
+let httpClient = new HttpClient_1.HttpClient();
+let searchClient = new SearchClient_1.SearchClient(httpClient);
+console.log(searchClient);
 
-},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/Logger/ConsoleLogger":3,"./Helpers/Logger/HTMLLogger":4,"./Helpers/Logger/Logger":5,"./Helpers/ModelHelper":6,"./Helpers/RESTQueryHelper":7,"./Model/Query":8,"./Repository/BasicEntityRepository":9,"./Repository/ComposedEntityRepository":10,"./Repository/RESTEntityRepository":11,"./Repository/SessionStorageRepository":12}]},{},[13])(13)
+},{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/ArrayHelpers":3,"./Helpers/ComponentHelpers/PeoplePickerHelper":4,"./Helpers/Logger/ConsoleLogger":5,"./Helpers/Logger/HTMLLogger":6,"./Helpers/Logger/Logger":7,"./Helpers/ModelHelper":8,"./Helpers/RESTQueryHelper":9,"./Helpers/Search/SearchClient":10,"./Helpers/Search/SearchQueryBuilder":11,"./Helpers/Search/UserSearchResultMapper":12,"./Model/Query":13,"./Repository/BasicEntityRepository":14,"./Repository/ComposedEntityRepository":15,"./Repository/RESTEntityRepository":16,"./Repository/SearchDrivenDataProvider":17,"./Repository/SessionStorageRepository":18}]},{},[19])(19)
 });
