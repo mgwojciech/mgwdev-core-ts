@@ -6,14 +6,12 @@ import { SearchQueryBuilder } from "../Helpers/Search/SearchQueryBuilder";
 
 export class SearchDrivenDataProvider<T> implements IDataProvider<T>{
     constructor(protected ResultMapper: ISearchResultsMapper<T>,
-        protected SearchClient: SearchClient, 
-        protected QueryBuilder: SearchQueryBuilder){
+        protected SearchClient: SearchClient){
 
     }
     Get(query: Query): Promise<T[]> {
         let self = this;
-        let searchQuery = this.QueryBuilder.BuildQuery(query.Query || "", query.Skip);
-        return self.SearchClient.QuerySearch(searchQuery).then((results)=>{
+        return self.SearchClient.QuerySearch(query.Query || "", query.Skip).then((results)=>{
             return self.ResultMapper.MapToEntity(results);
         });
     }

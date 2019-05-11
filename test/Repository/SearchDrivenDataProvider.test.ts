@@ -13,7 +13,7 @@ describe('SearchDrivenDataProvider', () => {
             method: "GET",
             response: UserSearchResponse.Response
         }])
-        let entityRepository = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new SearchClient(httpClient), new UserSearchQueryBuilder());
+        let entityRepository = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new SearchClient(httpClient,new UserSearchQueryBuilder()));
 
         entityRepository.Get({Query: "Test"}).then((results) => {
             assert.equal(results[0].PreferredName, "Test 1")
@@ -25,7 +25,7 @@ describe('SearchDrivenDataProvider', () => {
             method: "GET",
             response: UserSearchResponse.Response
         }])
-        let entityRepository = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new BasicSearchClient(httpClient), new SimpleSearchQueryBuilder());
+        let entityRepository = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new BasicSearchClient(httpClient, new SimpleSearchQueryBuilder()));
 
         entityRepository.Get({Query: "Test"}).then((results) => {
             assert.equal(results[0].PreferredName, "Test 1")

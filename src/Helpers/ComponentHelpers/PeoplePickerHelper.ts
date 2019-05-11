@@ -26,7 +26,7 @@ export class SearchDrivenPeoplePickerHelperFactory implements IPeoplePickerHelpe
 
     }
     public GetPeoplePickerHelper(SelectedPeople: User[] = []) : PeoplePickerHelper{
-        let dataProvider = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new SearchClient(this.HttpClient),new UserSearchQueryBuilder());
+        let dataProvider = new SearchDrivenDataProvider<User>(new UserSearchResultMapper(),new SearchClient(this.HttpClient,new UserSearchQueryBuilder()));
 
         return new PeoplePickerHelper(dataProvider, SelectedPeople);
     }

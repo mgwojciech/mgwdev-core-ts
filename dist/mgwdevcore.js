@@ -83,7 +83,7 @@ class ArrayHelper {
         let temp = array.find((item) => {
             return item.Key == key;
         });
-        if (temp)
+        if (temp && temp.Value)
             return temp.Value;
         return "";
     }
@@ -98,9 +98,9 @@ const SearchDrivenDataProvider_1 = require("../../Repository/SearchDrivenDataPro
 const UserSearchResultMapper_1 = require("../Search/UserSearchResultMapper");
 const SearchQueryBuilder_1 = require("../Search/SearchQueryBuilder");
 class PeoplePickerHelper {
-    constructor(SelectedPeople, UsersRepository) {
-        this.SelectedPeople = SelectedPeople;
+    constructor(UsersRepository, SelectedPeople = []) {
         this.UsersRepository = UsersRepository;
+        this.SelectedPeople = SelectedPeople;
     }
     QueryPeopleSource(queryText) {
         return this.UsersRepository.Get({
@@ -113,9 +113,9 @@ class SearchDrivenPeoplePickerHelperFactory {
     constructor(HttpClient) {
         this.HttpClient = HttpClient;
     }
-    GetPeoplePickerHelper(SelectedPeople) {
-        let dataProvider = new SearchDrivenDataProvider_1.SearchDrivenDataProvider(new UserSearchResultMapper_1.UserSearchResultMapper(), new SearchClient_1.SearchClient(this.HttpClient), new SearchQueryBuilder_1.UserSearchQueryBuilder());
-        return new PeoplePickerHelper(SelectedPeople, dataProvider);
+    GetPeoplePickerHelper(SelectedPeople = []) {
+        let dataProvider = new SearchDrivenDataProvider_1.SearchDrivenDataProvider(new UserSearchResultMapper_1.UserSearchResultMapper(), new SearchClient_1.SearchClient(this.HttpClient, new SearchQueryBuilder_1.UserSearchQueryBuilder()));
+        return new PeoplePickerHelper(dataProvider, SelectedPeople);
     }
 }
 exports.SearchDrivenPeoplePickerHelperFactory = SearchDrivenPeoplePickerHelperFactory;
@@ -247,20 +247,26 @@ exports.RESTQueryHelper = RESTQueryHelper;
 },{}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const SearchQueryBuilder_1 = require("./SearchQueryBuilder");
 class SearchClient {
-    constructor(HttpClient) {
+    constructor(HttpClient, QueryBuilder = new SearchQueryBuilder_1.AdvancedSearchQueryBuilder()) {
         this.HttpClient = HttpClient;
+        this.QueryBuilder = QueryBuilder;
     }
-    QuerySearch(queryText) {
-        return this.HttpClient.Request(`/_api/search/query?querytext='${queryText}'`, "GET");
-    }
-    QuerySearchWithComplexQuery(complexQuery) {
-        return this.HttpClient.Request(`/_api/search/query${complexQuery}`, "GET");
+    QuerySearch(queryText, skip = 0) {
+        let query = this.QueryBuilder.BuildQuery(queryText, skip);
+        return this.HttpClient.Request(`/_api/search/query${query}`, "GET");
     }
 }
 exports.SearchClient = SearchClient;
+class BasicSearchClient extends SearchClient {
+    QuerySearch(queryText, skip = 0) {
+        return this.HttpClient.Request(`/_api/search/query?querytext='${queryText}'`, "GET");
+    }
+}
+exports.BasicSearchClient = BasicSearchClient;
 
-},{}],11:[function(require,module,exports){
+},{"./SearchQueryBuilder":11}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class SearchQueryBuilder {
@@ -270,6 +276,21 @@ class SearchQueryBuilder {
 }
 exports.SearchQueryBuilder = SearchQueryBuilder;
 class SimpleSearchQueryBuilder extends SearchQueryBuilder {
+    BuildQuery(queryText, skip = 0) {
+        return queryText;
+    }
+    BuildScopePart() {
+        return "";
+    }
+    BuildSkipAndTop(skip) {
+        return "";
+    }
+    BuildSelect() {
+        return "";
+    }
+}
+exports.SimpleSearchQueryBuilder = SimpleSearchQueryBuilder;
+class AdvancedSearchQueryBuilder extends SearchQueryBuilder {
     constructor(ScopeId, Top = 10, Fields) {
         super();
         this.ScopeId = ScopeId;
@@ -290,8 +311,8 @@ class SimpleSearchQueryBuilder extends SearchQueryBuilder {
         return "";
     }
 }
-exports.SimpleSearchQueryBuilder = SimpleSearchQueryBuilder;
-class UserSearchQueryBuilder extends SimpleSearchQueryBuilder {
+exports.AdvancedSearchQueryBuilder = AdvancedSearchQueryBuilder;
+class UserSearchQueryBuilder extends AdvancedSearchQueryBuilder {
     constructor() {
         super("b09a7990-05ea-4af9-81ef-edfab16c4e31", 10, ['PreferredName', 'AccountName', 'Department', 'JobTitle', 'PictureURL', 'UserProfile_GUID', 'WorkEmail']);
     }
@@ -311,6 +332,7 @@ class UserSearchResultMapper {
             searchResults.PrimaryQueryResult.RelevantResults.Table.Rows) {
             return searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.map((row) => {
                 return {
+                    Id: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "Id"),
                     AccountName: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "AccountName"),
                     Department: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "Department"),
                     JobTitle: ArrayHelpers_1.ArrayHelper.FindValueByKey(row.Cells, "JobTitle"),
@@ -504,15 +526,13 @@ exports.RESTEntityRepository = RESTEntityRepository;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class SearchDrivenDataProvider {
-    constructor(ResultMapper, SearchClient, QueryBuilder) {
+    constructor(ResultMapper, SearchClient) {
         this.ResultMapper = ResultMapper;
         this.SearchClient = SearchClient;
-        this.QueryBuilder = QueryBuilder;
     }
     Get(query) {
         let self = this;
-        let searchQuery = this.QueryBuilder.BuildQuery(query.Query || "", query.Skip);
-        return self.SearchClient.QuerySearchWithComplexQuery(searchQuery).then((results) => {
+        return self.SearchClient.QuerySearch(query.Query || "", query.Skip).then((results) => {
             return self.ResultMapper.MapToEntity(results);
         });
     }
@@ -566,8 +586,6 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-const HttpClient_1 = require("./Client/HttpClient");
-const SearchClient_1 = require("./Helpers/Search/SearchClient");
 __export(require("./Client/HttpClient"));
 __export(require("./Client/MockHttpClient"));
 __export(require("./Helpers/ModelHelper"));
@@ -587,9 +605,6 @@ __export(require("./Helpers/Search/SearchClient"));
 __export(require("./Helpers/Search/SearchQueryBuilder"));
 __export(require("./Helpers/Search/UserSearchResultMapper"));
 __export(require("./Helpers/ArrayHelpers"));
-let httpClient = new HttpClient_1.HttpClient();
-let searchClient = new SearchClient_1.SearchClient(httpClient);
-console.log(searchClient);
 
 },{"./Client/HttpClient":1,"./Client/MockHttpClient":2,"./Helpers/ArrayHelpers":3,"./Helpers/ComponentHelpers/PeoplePickerHelper":4,"./Helpers/Logger/ConsoleLogger":5,"./Helpers/Logger/HTMLLogger":6,"./Helpers/Logger/Logger":7,"./Helpers/ModelHelper":8,"./Helpers/RESTQueryHelper":9,"./Helpers/Search/SearchClient":10,"./Helpers/Search/SearchQueryBuilder":11,"./Helpers/Search/UserSearchResultMapper":12,"./Model/Query":13,"./Repository/BasicEntityRepository":14,"./Repository/ComposedEntityRepository":15,"./Repository/RESTEntityRepository":16,"./Repository/SearchDrivenDataProvider":17,"./Repository/SessionStorageRepository":18}]},{},[19])(19)
 });
